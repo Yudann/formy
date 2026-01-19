@@ -14,6 +14,13 @@ export interface Question {
   placeholder?: string;
   options?: QuestionOption[];
   required?: boolean;
+  multiSelect?: boolean;
+  validation?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+    customError?: string;
+  };
 }
 
 export interface FormData {
@@ -29,3 +36,21 @@ export enum AppState {
 }
 
 export type Theme = 'light' | 'dark';
+
+export interface ResultData {
+  id: string;
+  created_at: string;
+  name: string;
+  age: number;
+  major: string;
+  semester: number;
+  social_media: string;
+  duration: string;
+  unaware_time: number;
+  hard_to_stop: number;
+  distraction: number;
+  procrastination: number;
+  scroll_while_study: number;
+  addiction_feel: number;
+  final_reflection: number;
+}

@@ -109,9 +109,9 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen w-screen flex flex-col relative transition-colors duration-300 overflow-x-hidden ${appState !== AppState.RESULTS ? 'h-screen h-[100svh] overflow-hidden' : ''}`}>
-      {/* Decorative background blobs - reduced opacity for cleaner look */}
-      <div className="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[120px] pointer-events-none" />
+      {/* Decorative background blobs - optimized for mobile performance */}
+      <div className="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[60px] md:blur-[120px] pointer-events-none transform-gpu will-change-transform" />
+      <div className="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-[60px] md:blur-[120px] pointer-events-none transform-gpu will-change-transform" />
 
       <ThemeToggle theme={theme} onToggle={toggleTheme} />
 

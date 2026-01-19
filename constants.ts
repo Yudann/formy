@@ -7,7 +7,11 @@ export const QUESTIONS: Question[] = [
     question: 'Nama kamu siapa nih?',
     type: 'text',
     placeholder: 'Ketik nama kamu di sini...',
-    required: false,
+    required: true,
+    validation: {
+      pattern: '^[a-zA-Z\\s]+$',
+      customError: 'Nama cuma boleh huruf ya!'
+    }
   },
   {
     id: 'age',
@@ -15,6 +19,10 @@ export const QUESTIONS: Question[] = [
     type: 'number',
     placeholder: 'Contoh: 20',
     required: true,
+    validation: {
+      min: 16,
+      max: 30
+    }
   },
   {
     id: 'major',
@@ -29,11 +37,16 @@ export const QUESTIONS: Question[] = [
     type: 'number',
     placeholder: 'Contoh: 4',
     required: true,
+    validation: {
+      min: 1,
+      max: 14
+    }
   },
   {
     id: 'social_media',
-    question: 'Media sosial yang paling sering kamu buka apa?',
+    question: 'Media sosial apa saja yang sering kamu buka? (Boleh pilih lebih dari satu)',
     type: 'choice',
+    multiSelect: true,
     options: [
       { label: 'Instagram', value: 'instagram' },
       { label: 'TikTok', value: 'tiktok' },
