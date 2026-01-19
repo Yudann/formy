@@ -19,7 +19,9 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (question.type === 'text' || question.type === 'number') {
+    // Only auto-focus on desktop to prevent heavy layout shifts on mobile (keyboard slide-up)
+    // which causes animation lag
+    if (window.innerWidth >= 768 && (question.type === 'text' || question.type === 'number')) {
       inputRef.current?.focus();
     }
   }, [question.id]);
@@ -53,36 +55,59 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={question.placeholder}
+            min={question.validation?.min}
+            max={question.validation?.max}
             className="w-full bg-transparent border-b-2 border-slate-200 dark:border-slate-800 focus:border-indigo-500 dark:focus:border-indigo-400 py-3 md:py-4 text-3xl md:text-5xl font-bold text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
           />
         );
       case 'choice':
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-            {question.options?.map((opt) => (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                key={opt.value}
-                onClick={() => onChange(opt.value)}
-                className={`p-3 md:p-4 rounded-xl md:rounded-2xl border-2 text-left transition-all ${
-                  value === opt.value
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 ring-4 ring-indigo-600/10'
-                    : 'border-slate-100 dark:border-slate-800/50 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold">{opt.label}</span>
-                  {value === opt.value && (
-                    <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-              </motion.button>
-            ))}
+            {question.options?.map((opt) => {
+              const currentVal = String(value || '');
+              const isSelected = question.multiSelect 
+                ? currentVal.split(',').includes(String(opt.value))
+                : currentVal === String(opt.value);
+
+              return (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  key={opt.value}
+                  onClick={() => {
+                    if (question.multiSelect) {
+                      const selected = currentVal ? currentVal.split(',') : [];
+                      const valStr = String(opt.value);
+                      let newSelected;
+                      if (selected.includes(valStr)) {
+                        newSelected = selected.filter(s => s !== valStr);
+                      } else {
+                        newSelected = [...selected, valStr];
+                      }
+                      onChange(newSelected.join(','));
+                    } else {
+                      onChange(opt.value);
+                    }
+                  }}
+                  className={`p-3 md:p-4 rounded-xl md:rounded-2xl border-2 text-left transition-all ${
+                    isSelected
+                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 ring-4 ring-indigo-600/10'
+                      : 'border-slate-100 dark:border-slate-800/50 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold">{opt.label}</span>
+                    {isSelected && (
+                      <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
         );
       case 'scale':

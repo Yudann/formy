@@ -26,7 +26,43 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 }) => {
   const currentQuestion = questions[currentStep];
   const progress = ((currentStep + 1) / questions.length) * 100;
-  const isValueMissing = currentQuestion.required && !formData[currentQuestion.id];
+  const getValidationError = () => {
+    const value = formData[currentQuestion.id];
+    
+    // Required check
+    if (currentQuestion.required && (value === undefined || value === '')) {
+      return 'Wajib diisi ya!';
+    }
+
+    // Validation check (min/max for numbers, pattern for text)
+    if (currentQuestion.validation && value !== undefined && value !== '') {
+      const { min, max, pattern, customError } = currentQuestion.validation;
+      
+      // Number validation
+      if (currentQuestion.type === 'number') {
+        const numVal = Number(value);
+        if (min !== undefined && numVal < min) {
+          return `Minimal ${min} ya`;
+        }
+        if (max !== undefined && numVal > max) {
+          return `Maksimal ${max} aja`;
+        }
+      }
+
+      // Regex validation (e.g. for Name)
+      if (pattern) {
+        const regex = new RegExp(pattern);
+        if (!regex.test(String(value))) {
+          return customError || 'Format tidak sesuai ya!';
+        }
+      }
+    }
+    
+    return null;
+  };
+
+  const validationError = getValidationError();
+  const isNextDisabled = !!validationError || isSubmitting;
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
@@ -67,27 +103,39 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="w-full"
+            className="w-full transform-gpu will-change-transform"
           >
             <QuestionRenderer
               question={currentQuestion}
               value={formData[currentQuestion.id]}
               onChange={(val) => onUpdate(currentQuestion.id, val)}
-              onEnter={!isValueMissing ? onNext : undefined}
+              onEnter={!isNextDisabled ? onNext : undefined}
             />
           </motion.div>
         </AnimatePresence>
+        
+        {/* Validation Message */}
+        {validationError && formData[currentQuestion.id] && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 text-red-500 font-medium text-sm md:text-base flex items-center gap-2"
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+            {validationError}
+          </motion.div>
+        )}
       </div>
 
       {/* Navigation - more compact */}
       <div className="p-6 md:p-8 space-y-4">
         <motion.button
-          whileHover={!isValueMissing ? { scale: 1.01 } : {}}
-          whileTap={!isValueMissing ? { scale: 0.98 } : {}}
+          whileHover={!isNextDisabled ? { scale: 1.01 } : {}}
+          whileTap={!isNextDisabled ? { scale: 0.98 } : {}}
           onClick={onNext}
-          disabled={isValueMissing || isSubmitting}
+          disabled={isNextDisabled}
           className={`w-full py-4 md:py-5 rounded-xl md:rounded-2xl font-bold text-base md:text-lg transition-all flex items-center justify-center gap-2 ${
-            isValueMissing || isSubmitting
+            isNextDisabled
               ? 'bg-slate-100 dark:bg-slate-800/50 text-slate-300 dark:text-slate-700 cursor-not-allowed' 
               : 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/10 hover:bg-indigo-700'
           }`}
@@ -105,7 +153,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           ) : (
             <>
               {currentStep === questions.length - 1 ? 'Selesai & Kirim' : 'Lanjut'}
-              {!isValueMissing && <ChevronRight size={20} />}
+              {!isNextDisabled && <ChevronRight size={20} />}
             </>
           )}
         </motion.button>
